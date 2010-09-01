@@ -52,11 +52,7 @@ None
 == Changelog ==
 
 = 1.0.0 =
-* Added some auto correction logic to ensure the url of the bbb server is in the desired format.
-* Bug Fix: The user was not getting redireced to the meeting if the meeting name had spaces. 
-
-= 0.9 =
-* Beta Version.
+* Added the initial files.
 
 == Upgrade Notice ==
 
