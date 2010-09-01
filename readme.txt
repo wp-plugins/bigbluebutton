@@ -18,11 +18,10 @@ This section describes how to install the plugin and get it working.
 
 The easiest way to install is to watch this [installation video](http://www.youtube.com/watch?v=S-wsIQRCLUY "installation video") on YouTube. Here's an overview of the installation.
 
-   1. Download the BigBlueButton Wordpress plugin.
    1. Log in as an admin and click on the Plugins menu on the sidebar.
    1. Click Add new.
-   1. Select upload.
-   1. Browse to the zip file that was downloaded in step 1, and click Install Now.
+   1. In the search bar enter "bigbluebutton" and click search plugins.
+   1. When you find the plugin called BigBlueButton by Blindside Networks click the install now link.
    1. Activate the Plugin.
    1. Click on widgets under the Appearance menu.
    1. Find the BigBlueButton Widget. Then click and drag it to either the right, content, or footer windows on the right of the screen depending on where you wish the BigBlueButton widget to appear.
