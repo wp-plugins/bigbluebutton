@@ -2,7 +2,7 @@
 /* 
 Plugin Name: BigBlueButton
 Plugin URI: http://blindsidenetworks.com/integration
-Version: v1.0.1
+Version: v1.0
 Author: Blindside Networks
 Author URI: http://blindsidenetworks.com/
 Description: Integrates BigBlueButton into a WordPress site
