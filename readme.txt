@@ -4,7 +4,7 @@ Donate link: http://blindsidenetworks.com/integration
 Tags: blindsidenetworks, bigbluebutton, opensource, web, conferencing,
 Requires at least: 3.0.1
 Tested up to: 3.0.1
-Stable tag: 1.0
+Stable tag: 1.0.1
 
 This plugin integrates BigBlueButton functionality into Wordpress. 
 
@@ -33,11 +33,11 @@ To install from source watch this [installation video](http://www.youtube.com/wa
 
 **Why is it giving an error about creating a meeting room?**
 
-*Make sure you are using BigBlueButton 0.7.
+Make sure you are using BigBlueButton 0.7.
 
 **What is this error: "Unable to display the meetings. Please check the url of the bigbluebutton server AND check to see if the bigbluebutton server is running."?**
 
-*You must make sure you add "/bigbluebutton/" at the end. 
+You must make sure you add "/bigbluebutton/" at the end. 
 
 So as an example:
 
@@ -46,10 +46,16 @@ So as an example:
 
 == Changelog ==
 
+= 1.0.1 =
+* Updated the algorithm.
+
 = 1.0 =
 * Added the initial files.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+The backend logic has been optimized.
 
 = 1.0 =
 This version is the official release of the bigbluebutton plugin.
