@@ -14,7 +14,6 @@ This plugin integrates BigBlueButton functionality into Wordpress.
 
 ***Requires at least BigBlueButton 0.7***
 
-
 == Installation ==
 
 This section describes how to install the plugin and get it working.
@@ -51,7 +50,6 @@ So as an example:
 == Screenshots ==
 
 None
-
 
 == Changelog ==
 
