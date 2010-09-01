@@ -32,12 +32,15 @@ To install from source watch this [installation video](http://www.youtube.com/wa
 == Frequently Asked Questions ==
 
 **Why is it giving an error about creating a meeting room?**
+
 *Make sure you are using BigBlueButton 0.7.
 
 **What is this error: "Unable to display the meetings. Please check the url of the bigbluebutton server AND check to see if the bigbluebutton server is running."?**
+
 *You must make sure you add "/bigbluebutton/" at the end. 
 
 So as an example:
+
 * Wrong - "http://example.com/"
 * Correct - "http://example.com/bigbluebutton/" 
 
