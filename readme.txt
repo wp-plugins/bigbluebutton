@@ -12,8 +12,6 @@ This plugin integrates BigBlueButton functionality into Wordpress.
 
 [BigBlueButton](http://bigbluebutton.org/ "BigBlueButton") is an open source web conferencing system. This plugin integrates BigBlueButton into WordPress allowing bloggers to create and manage meetings rooms to interact with their readers.
 
-***Requires at least BigBlueButton 0.7***
-
 == Installation ==
 
 This section describes how to install the plugin and get it working.
