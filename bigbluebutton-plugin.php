@@ -2,7 +2,7 @@
 /* 
 Plugin Name: BigBlueButton
 Plugin URI: http://blindsidenetworks.com/integration
-Version: 1.0.1
+Version: 1.0.0
 Author: Blindside Networks
 Author URI: http://blindsidenetworks.com/
 Description: Integrates BigBlueButton into a WordPress site
@@ -498,6 +498,8 @@ function bbb_general_settings() {
 		</p>
 		<p>Wait for moderator to start meetings:<input type="checkbox" name="<?php echo $waitForModerator_name; ?>" value="yes" <?php if($waitForModerator_val == 'yes' ) echo 'checked="yes"';?>"/>
 		</p>
+		
+		<p><i><a href="http://bigbluebutton.org/support">For more information on setting up your own bbb server, or for using an external hosting provider click here.</a></i></p>
 		
 		<p class="submit">
 			<input type="submit" name="Submit" class="button-primary" value="<?php echo 'Save Changes'; ?>" />
