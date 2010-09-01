@@ -1,7 +1,7 @@
 <?php
 /* 
 Plugin Name: BigBlueButton
-Plugin URI: http://blindsidenetworks.com/integration
+Plugin URI: http://wordpress.org/extend/plugins/bigbluebutton/
 Version: 1.0.0
 Author: Blindside Networks
 Author URI: http://blindsidenetworks.com/
