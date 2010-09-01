@@ -16,8 +16,6 @@ This plugin integrates BigBlueButton functionality into Wordpress.
 
 This section describes how to install the plugin and get it working.
 
-The easiest way to install is to watch this [installation video](http://www.youtube.com/watch?v=S-wsIQRCLUY "installation video") on YouTube. Here's an overview of the installation.
-
    1. Log in as an admin and click on the Plugins menu on the sidebar.
    1. Click Add new.
    1. In the search bar enter "bigbluebutton" and click search plugins.
@@ -28,14 +26,16 @@ The easiest way to install is to watch this [installation video](http://www.yout
    1. Click on BigBlueButton under the settings menu.
    1. Fill out the URL of where the BigBlueButton server is running (be sure to add /bigbluebutton/ to the end of the URL) and its salt. Then click on save changes.
    1. You are ready to begin creating meetings, and holding conferences.
+   
+To install from source watch this [installation video](http://www.youtube.com/watch?v=S-wsIQRCLUY "installation video") on YouTube. Here's an overview of the installation.
 
 == Frequently Asked Questions ==
 
-= Why is it giving an error about creating a meeting room?  =
+=== Why is it giving an error about creating a meeting room?  ===
 
 Make sure you are using BigBlueButton 0.7.
 
-= What is this error: "Unable to display the meetings. Please check the url of the bigbluebutton server AND check to see if the bigbluebutton server is running."?  =
+=== What is this error: "Unable to display the meetings. Please check the url of the bigbluebutton server AND check to see if the bigbluebutton server is running."?  ===
 
 You must make sure you add "/bigbluebutton/" at the end. 
 
@@ -44,18 +44,10 @@ So as an example:
 * Wrong - "http://example.com/"
 * Correct - "http://example.com/bigbluebutton/" 
 
-== Screenshots ==
-
-None
-
 == Changelog ==
 
 = 1.0 =
-* Added some auto correction logic to ensure the url of the bbb server is in the desired format.
-* Bug Fix: The user was not getting redireced to the meeting if the meeting name had spaces. 
-
-= 0.9 =
-* Beta Version.
+* Added the initial files.
 
 == Upgrade Notice ==
 
