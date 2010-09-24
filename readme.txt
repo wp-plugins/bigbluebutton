@@ -29,8 +29,6 @@ The easiest way to install is to watch this [installation video](http://www.yout
    1. Fill out the URL of where the BigBlueButton server is running (be sure to add /bigbluebutton/ to the end of the URL) and its salt. Then click on save changes.
    1. You are ready to begin creating meetings, and holding conferences.
 
-To install from source watch this [installation video](http://www.youtube.com/watch?v=S-wsIQRCLUY "installation video") on YouTube.
-
 == Frequently Asked Questions ==
 
 
