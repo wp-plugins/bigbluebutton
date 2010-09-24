@@ -1,11 +1,11 @@
 <?php
 /* 
 Plugin Name: BigBlueButton
-Plugin URI: http://wordpress.org/extend/plugins/bigbluebutton/
-Version: 1.0.0
+Plugin URI: http://blindsidenetworks.com/integration
+Version: 1.0.1
 Author: Blindside Networks
 Author URI: http://blindsidenetworks.com/
-Description: Integrates BigBlueButton into a WordPress site
+Description: BigBlueButton is an open source web conferencing system. This plugin integrates BigBlueButton into WordPress allowing bloggers to create and manage meetings rooms to interact with their readers. For more information on setting up your own BigBlueButton server or for using an external hosting provider visit http://bigbluebutton.org/support
 
    Copyright 2010 Blindside Networks
 
@@ -197,76 +197,64 @@ function bigbluebutton_sidebar($args) {
 		
 		$found = $wpdb->get_row("SELECT * FROM ".$table_name." WHERE meetingID = '".$meetingID."'");
 		if($found->meetingID == $meetingID && ($found->moderatorPW == $password || $found->attendeePW == $password) ){
-			$info = BigBlueButton::getMeetingInfoArray( $found->meetingID."[".$found->meetingVersion."]", $found->moderatorPW, $url_val, $salt_val);
+			
+			//Calls create meeting on the bigbluebutton server
+			$response = BigBlueButton::createMeetingArray($name, $meetingID."[".$found->meetingVersion."]", 'Welcome to '.$meetingID, $found->moderatorPW, $found->attendeePW, $salt_val, $url_val, get_option('siteurl') );
+			$createNew = false;
+			$joinMeeting = false;
 			//Analyzes the bigbluebutton server's response
-			if(!$info || $info['returncode'] && $info['messageKey'] != 'notFound' && $info['messageKey'] != 'invalidPassword'){ //An error occured so display to the user no meetings are available
+			if(!$response || ($response['returncode'] == 'FAILED' && $response['messageKey'] != 'idNotUnique')){//If the server is unreachable, or an error occured
 				echo "Sorry an error occured while joining the meeting.";
 				echo $after_widget;
 				return;
 			}
-			else if( $info['returncode'] && $info['messageKey'] == 'notFound'){	//The meeting exists only in the wordpress db
-				
-				if (bbb_widget_join_meeting($found, $name, $password, $salt_val, $url_val) ) return;
-				
-			} 
-			else if($info['returncode'] && $info['messageKey'] == 'invalidPassword' || $info['hasBeenForciblyEnded']=='true' ){
-				//Finds a version number that has not been used for that meetingID. And creates and joins that meeting
-				//This eliminates the waiting for 1 hr to rejoin a meeting
-				$originalVersion = $found->meetingVersion;
-				$wpdb->update( $table_name, array( $meetingVersion_name => $found->meetingVersion + 1), array( $meetingID_name => $found->meetingID ));
-				$found->meetingVersion = $found->meetingVersion + 1;
-				for(;;){
-					$response = BigBlueButton::getMeetingInfoArray( $found->meetingID."[".$found->meetingVersion."]", $found->moderatorPW, $url_val, $salt_val);
-					//Analyzes the bigbluebutton server's response
-					if(!$response || $response['returncode'] && $response['messageKey'] != 'notFound' && $response['messageKey'] != 'invalidPassword' ) { //If the meeting was unable to be retrieved due to an error
-						echo "Sorry an error occured while joining the meeting.";
-						echo $after_widget;
-						return;
-					}
-					else if( $response['returncode'] && $response['messageKey'] == 'notFound'){ //The meeting does not exist in the bbb server, so create it	
-						break;
-					}
-					else if($response['returncode'] && $response['messageKey'] == 'invalidPassword' || $response['hasBeenForciblyEnded'] == true ){
-						if($found->meetingVersion >= $originalVersion + 3){
-							$wpdb->update( $table_name, array( $meetingVersion_name => $found->meetingVersion + 5), array( $meetingID_name => $found->meetingID ));
-							$found->meetingVersion = $found->meetingVersion  + 5;
-							$originalVersion = $found->meetingVersion;
-						}
-						else {
-							$wpdb->update( $table_name, array( $meetingVersion_name => $found->meetingVersion + 1), array( $meetingID_name => $found->meetingID ));
-							$found->meetingVersion = $found->meetingVersion + 1;
-						}
-					}
-				}
-				//creates the meeting and then joins it
-				if (bbb_widget_join_meeting($found, $name, $password, $salt_val, $url_val) ) return;
+			else if( ($response['returncode'] == 'FAILED' && $response['messageKey'] == 'idNotUnique') || $response['hasBeenForciblyEnded'] == 'true'){ //If the meeting already exists or has been forcibly ended we will create a new one
+				$createNew = true;
 			}
-			else{ //The meeting exists in the bbb server
-					
-				//The meeting the user is trying to join is valid, meaning it has not been forcibly ended and therefore is
-				//within the 1 hr period of unavailability.
-				if($info['hasBeenForciblyEnded']=='false' ){ 
-					
-					$bbb_joinURL = BigBlueButton::joinAsViewer($found->meetingID."[".$found->meetingVersion."]", $name,'', $password, $salt_val, $url_val );
-					//If the meeting is already running or the moderator is trying to join or a viewer is trying to join and the
-					//do not wait for moderator option is set to false then the user is immediately redirected to the meeting
-					if ( (BigBlueButton::isMeetingRunning( $found->meetingID."[".$found->meetingVersion."]", $url_val, $salt_val ) && ($found->moderatorPW == $password || $found->attendeePW == $password ) )
-						|| $info['moderatorPW'] == $password 
-						|| ($info['attendeePW'] == $password && get_option($waitForModerator_name) != 'yes' ) ){
-							//If the password submitted is correct then the user gets redirected
-							?><script type="text/javascript"> window.location = "<?php echo $bbb_joinURL ?>";</script><?php
-							return;
-					}
-					//If the viewer has the correct password, but the meeting has not yet started they have to wait
-					//for the moderator to start the meeting
-					else if ($found->attendeePW == $password){
-						//Stores the url and salt of the bigblubutton server in the session
-						$_SESSION[$url_name] = $url_val;
-						$_SESSION[$salt_name] = $salt_val;
-						//Displays the javascript to automatically redirect the user when the meeting begins
-						bbb_display_redirect_script($bbb_joinURL, $found->meetingID, $found->meetingID."[".$found->meetingVersion."]", $name);
+			else{ //The user can join the meeting, as it is valid
+				$joinMeeting = true;
+			}
+			
+			if($createNew){
+				//Sets the meeting version to the time stamp, and updates the database
+				$found->meetingVersion = time();
+				$wpdb->update( $table_name, array( $meetingVersion_name => $found->meetingVersion), array( $meetingID_name => $meetingID ));
+				
+				//Calls create meeting on the bigbluebutton server using the new time stamp
+				$response = BigBlueButton::createMeetingArray($name, $meetingID."[".$found->meetingVersion."]", 'Welcome to '.$meetingID, $found->moderatorPW, $found->attendeePW, $salt_val, $url_val, get_option('siteurl') );
+				
+				if(!$response || $response['returncode'] == 'FAILED'){//If the server is unreachable, or an error occured 
+					echo "Sorry an error occured while joining the meeting.";
+					echo $after_widget;
+					return;
+				}
+				else{//The user can join the meeting, as it is valid
+					$joinMeeting = true;
+				}
+			}	
+		
+		
+			if ($joinMeeting){
+				$bbb_joinURL = BigBlueButton::joinURL($found->meetingID."[".$found->meetingVersion."]", $name,$password, $salt_val, $url_val );
+				//If the meeting is already running or the moderator is trying to join or a viewer is trying to join and the
+				//do not wait for moderator option is set to false then the user is immediately redirected to the meeting
+				if ( (BigBlueButton::isMeetingRunning( $found->meetingID."[".$found->meetingVersion."]", $url_val, $salt_val ) && ($found->moderatorPW == $password || $found->attendeePW == $password ) )
+					|| $response['moderatorPW'] == $password 
+					|| ($response['attendeePW'] == $password && get_option($waitForModerator_name) != 'yes' ) ){
+						//If the password submitted is correct then the user gets redirected
+						?><script type="text/javascript"> window.location = "<?php echo $bbb_joinURL ?>";</script><?php
 						return;
-					}
+				}
+				//If the viewer has the correct password, but the meeting has not yet started they have to wait
+				//for the moderator to start the meeting
+				else if ($found->attendeePW == $password){
+					//Stores the url and salt of the bigblubutton server in the session
+					$_SESSION[$url_name] = $url_val;
+					$_SESSION[$salt_name] = $salt_val;
+					//Displays the javascript to automatically redirect the user when the meeting begins
+					bbb_display_redirect_script($bbb_joinURL, $found->meetingID, $found->meetingID."[".$found->meetingVersion."]", $name);
+					echo $after_widget;
+					return;
 				}
 			}
 		}
@@ -329,44 +317,6 @@ function bigbluebutton_sidebar($args) {
 	echo $after_widget;
 }
 
-//The meeting that is being joined only exists in the wordpress database, or the meeting being joined was forcibly ended and is unjoinable
-//Therefore a meeting is created with the version specified, and then joined.
-function bbb_widget_join_meeting($found, $name, $password, $salt_val, $url_val){
-	
-	global $wpdb, $waitForModerator_name, $meetingID_name, $meetingVersion_name, $attendeePW_name, $moderatorPW_name, $salt_name, $url_name;
-		
-	if ( $found->moderatorPW == $password || $found->attendeePW == $password ){
-		
-		//Calls creates the meeting on the bigbluebutton server
-		$response = BigBlueButton::createMeetingArray($name, $found->meetingID."[".$found->meetingVersion."]", '', $found->moderatorPW, $found->attendeePW, $salt_val, $url_val, get_option('siteurl'));
-		
-		//Analyzes the bigbluebutton server's response
-		if(!$response || $response['returncode'] == 'FAILED' ) { //The meeting was not created
-			echo "Sorry an error occured while joining the meeting.";
-			echo $after_widget;
-		}
-		else{ //The meeting was created, and the user will now be joined
-			$bbb_joinURL = BigBlueButton::joinAsViewer($found->meetingID."[".$found->meetingVersion."]", $name,'', $password, $salt_val, $url_val );
-			
-			//If the meeting is already running then join immediately
-			//Check the waitformoderator option. If it states not to wait for moderator then join immediately
-			//Otherwise, wait till the meeting has been started by a moderator before joining
-			if( get_option($waitForModerator_name) != 'yes' || $found->moderatorPW == $password || BigBlueButton::isMeetingRunning( $found->meetingID."[".$found->meetingVersion."]", $url_val, $salt_val ) ){
-				?><script type="text/javascript"> window.location = "<?php echo $bbb_joinURL ?>";</script><?php
-			}
-			else{
-				
-				//Stores the url and salt of the bigblubutton server in the session
-				$_SESSION[$url_name] = $url_val;
-				$_SESSION[$salt_name] = $salt_val;
-				
-				bbb_display_redirect_script($bbb_joinURL, $found->meetingID, $found->meetingID."[".$found->meetingVersion."]", $name);
-			}
-		}
-		return true;
-	}
-	return false;
-}
 
 //Displays the javascript that handles redirecting a user, when the meeting has started
 //the meetingName is the meetingID[$meetingVersion]
@@ -499,7 +449,7 @@ function bbb_general_settings() {
 		<p>Wait for moderator to start meetings:<input type="checkbox" name="<?php echo $waitForModerator_name; ?>" value="yes" <?php if($waitForModerator_val == 'yes' ) echo 'checked="yes"';?>"/>
 		</p>
 		
-		<p><i><a href="http://bigbluebutton.org/support">For more information on setting up your own bbb server, or for using an external hosting provider click here.</a></i></p>
+		<p><i><a href="http://bigbluebutton.org/support">For more information on setting up your own BigBlueButton server, or for using an external hosting provider click here.</a></i></p>
 		
 		<p class="submit">
 			<input type="submit" name="Submit" class="button-primary" value="<?php echo 'Save Changes'; ?>" />
@@ -537,126 +487,118 @@ function bbb_list_meetings() {
 	$salt_val = get_option($salt_name);
 	
 	//---------------------------------------------------JOIN-----------------------------------------------
-	if( isset($_POST['Submit']) && $_POST['Submit'] == 'Join' ) { //Creates then joins the meeting. If any problems occur the error is displayed
-		// Read the posted value and delete
+	if( isset($_POST['Submit']) ) { //Creates then joins the meeting. If any problems occur the error is displayed
+		// Read the posted value and delete		
         $meetingID = $_POST[$meetingID_name];
-		$meetingVersion = $_POST[$meetingVersion_name];
-		$moderatorPW = $_POST[$moderatorPW_name];
-		$attendeePW = $_POST[$attendeePW_name];
 		
-		$originalVersion = $meetingVersion;
-		for(;;){
-			$response = BigBlueButton::getMeetingInfoArray( $meetingID."[".$meetingVersion."]", $moderatorPW, $url_val, $salt_val);
+		$found = $wpdb->get_row("SELECT * FROM ".$table_name." WHERE meetingID = '".$meetingID."'");
+		$moderatorPW = $found->moderatorPW;
+		$attendeePW = $found->attendeePW;
+		$meetingVersion = $found->meetingVersion;
+		
+		if($_POST['Submit'] == 'Join'){
+			//Calls create meeting on the bigbluebutton server
+			$response = BigBlueButton::createMeetingArray($current_user->display_name, $meetingID."[".$meetingVersion."]", 'Welcome to '.$meetingID, $moderatorPW, $attendeePW, $salt_val, $url_val, get_option('siteurl') );
+			$createNew = false;
 			//Analyzes the bigbluebutton server's response
 			if(!$response){//If the server is unreachable, then prompts the user of the necessary action
 				echo '<div class="updated"><p><strong>Unable to join the meeting. Please check the url of the bigbluebutton server AND check to see if the bigbluebutton server is running.</strong></p></div>';
+			}
+			else if( $response['returncode'] == 'FAILED' ) { //The meeting was not created
+				if($response['messageKey'] == 'idNotUnique'){
+					$createNew = true;
+				}
+				else if($response['messageKey'] == 'checksumError'){
+					echo '<div class="updated"><p><strong>A checksum error occured. Make sure you entered the correct salt.</strong></p></div>';
+				}
+				else{
+					echo '<div class="updated"><p><strong>'.$response['message'].'</strong></p></div>';
+				}
+			}
+			else if($response['hasBeenForciblyEnded'] == 'true'){ //The meeting was created, and the user will now be joined
+				$createNew = true;
+			}
+			else{
+				$bbb_joinURL = BigBlueButton::joinURL($meetingID."[".$meetingVersion."]", $current_user->display_name,$moderatorPW, $salt_val, $url_val );
+				?><script type="text/javascript"> window.location = "<?php echo $bbb_joinURL ?>";</script><?php
 				return;
 			}
-			else if( $response['returncode'] && $response['messageKey'] != 'notFound' && $response['messageKey'] != 'invalidPassword') {
+			
+			if($createNew){
+				//Sets the meeting version to the time stamp;
+				$meetingVersion = time();
+				$wpdb->update( $table_name, array( $meetingVersion_name => $meetingVersion), array( $meetingID_name => $meetingID ));
+				
+				//Calls create meeting on the bigbluebutton server
+				$response = BigBlueButton::createMeetingArray($current_user->display_name, $meetingID."[".$meetingVersion."]", 'Welcome to '.$meetingID, $moderatorPW, $attendeePW, $salt_val, $url_val, get_option('siteurl') );
+				
+				if(!$response){//If the server is unreachable, then prompts the user of the necessary action
+					echo '<div class="updated"><p><strong>Unable to join the meeting. Please check the url of the bigbluebutton server AND check to see if the bigbluebutton server is running.</strong></p></div>';
+				}
+				else if( $response['returncode'] == 'FAILED' ) { //The meeting was not created
+					if($response['messageKey'] == 'checksumError'){
+						echo '<div class="updated"><p><strong>A checksum error occured. Make sure you entered the correct salt.</strong></p></div>';
+					}
+					else{
+						echo '<div class="updated"><p><strong>'.$response['message'].'</strong></p></div>';
+					}
+				}
+				else{
+					$bbb_joinURL = BigBlueButton::joinURL($meetingID."[".$meetingVersion."]", $current_user->display_name,$moderatorPW, $salt_val, $url_val );
+					?><script type="text/javascript"> window.location = "<?php echo $bbb_joinURL ?>";</script><?php
+					return;
+				}
+			}		
+			
+		}	
+		//---------------------------------------------------END-------------------------------------------------
+		else if($_POST['Submit'] == 'End' ) { //Obtains the meeting information of the meeting that is going to be terminated
+			
+			//Calls endMeeting on the bigbluebutton server
+			$response = BigBlueButton::endMeeting($meetingID."[".$meetingVersion."]", $moderatorPW, $url_val, $salt_val );
+				
+			//Analyzes the bigbluebutton server's response
+			if(!$response){//If the server is unreachable, then prompts the user of the necessary action
+				echo '<div class="updated"><p><strong>Unable to terminate the meeting. Please check the url of the bigbluebutton server AND check to see if the bigbluebutton server is running.</strong></p></div>';
+			}
+			else if( $response['returncode'] == 'SUCCESS' ) { //The meeting was terminated
+				echo '<div class="updated"><p><strong>'.$meetingID.' meeting has been terminated.</strong></p></div>';
+			}
+			else{ //If the meeting was unable to be deleted due to an error
 				if($response['messageKey'] == 'checksumError'){
 					echo '<div class="updated"><p><strong>A checksum error occured. Make sure you entered the correct salt.</strong></p></div>';
 				}
 				else{
 					echo '<div class="updated"><p><strong>'.$response['message'].'</strong></p></div>';
 				}
-				return;
 			}
-			else if( $response['returncode'] && $response['messageKey'] == 'notFound'){			//The meeting does not exist in the bbb server, so create it	
-				break;
-			}
-			else if( ($response['returncode'] && $response['messageKey'] == 'invalidPassword') || $response['hasBeenForciblyEnded'] == 'true'){
-				if((int)$meetingVersion >= (int)$originalVersion + 3){
-					$wpdb->update( $table_name, array( $meetingVersion_name => (int)$meetingVersion + 5), array( $meetingID_name => $meetingID ));
-					$meetingVersion = (string)((int)$meetingVersion + 5);
-					$originalVersion = $meetingVersion;
-				}
-				else {
-					$wpdb->update( $table_name, array( $meetingVersion_name => (int)$meetingVersion + 1), array( $meetingID_name => $meetingID ));
-					$meetingVersion = (string)((int)$meetingVersion + 1);
-				}
-			}
-			else{
-				break;
-			}
-		}
-		
-		//Calls endMeeting on the bigbluebutton server
-		$response = BigBlueButton::createMeetingArray($current_user->display_name, $meetingID."[".$meetingVersion."]", '', $moderatorPW, $attendeePW, $salt_val, $url_val, get_option('siteurl') );
-		
-		//Analyzes the bigbluebutton server's response
-		if(!$response){//If the server is unreachable, then prompts the user of the necessary action
-			echo '<div class="updated"><p><strong>Unable to join the meeting. Please check the url of the bigbluebutton server AND check to see if the bigbluebutton server is running.</strong></p></div>';
-		}
-		else if( $response['returncode'] == 'FAILED' ) { //The meeting was not created
-			if($response['messageKey'] == 'checksumError'){
-				echo '<div class="updated"><p><strong>A checksum error occured. Make sure you entered the correct salt.</strong></p></div>';
-			}
-			else{
-				echo '<div class="updated"><p><strong>'.$response['message'].'</strong></p></div>';
-			}
-		}
-		else{ //The meeting was created, and the user will now be joined
-			$bbb_joinURL = BigBlueButton::joinAsViewer($meetingID."[".$meetingVersion."]", $current_user->display_name,'', $moderatorPW, $salt_val, $url_val );
-			?><script type="text/javascript"> window.location = "<?php echo $bbb_joinURL ?>";</script><?php
-			return;
-		}
-		
-    }
-	//---------------------------------------------------END-------------------------------------------------
-	else if( isset($_POST['Submit']) && $_POST['Submit'] == 'End' ) { //Obtains the meeting information of the meeting that is going to be terminated
-		// Read the posted value and delete
-        $meetingID = $_POST[$meetingID_name];
-		$meetingVersion = $_POST[$meetingVersion_name];
-		$moderatorPW = $_POST[$moderatorPW_name];
-		
-		//Calls endMeeting on the bigbluebutton server
-		$response = BigBlueButton::endMeeting($meetingID."[".$meetingVersion."]", $moderatorPW, $url_val, $salt_val );
 			
-		//Analyzes the bigbluebutton server's response
-		if(!$response){//If the server is unreachable, then prompts the user of the necessary action
-			echo '<div class="updated"><p><strong>Unable to terminate the meeting. Please check the url of the bigbluebutton server AND check to see if the bigbluebutton server is running.</strong></p></div>';
 		}
-		else if( $response['returncode'] == 'SUCCESS' ) { //The meeting was terminated
-			echo '<div class="updated"><p><strong>'.$meetingID.' meeting has been terminated.</strong></p></div>';
-		}
-		else{ //If the meeting was unable to be deleted due to an error
-			if($response['messageKey'] == 'checksumError'){
-				echo '<div class="updated"><p><strong>A checksum error occured. Make sure you entered the correct salt.</strong></p></div>';
-			}
-			else{
-				echo '<div class="updated"><p><strong>'.$response['message'].'</strong></p></div>';
-			}
-		}
-		
-    }
 		//---------------------------------------------------DELETE-------------------------------------------------
-	else if( isset($_POST['Submit']) && $_POST['Submit'] == 'Delete' ) { //Obtains the meeting information of the meeting that is going to be delete
-		// Read the posted value and delete
-        $meetingID = $_POST[$meetingID_name];
-		$moderatorPW = $_POST[$moderatorPW_name];
-		$meetingVersion = $_POST[$meetingVersion_name];
+		else if($_POST['Submit'] == 'Delete' ) { //Obtains the meeting information of the meeting that is going to be delete
 		
-		//Calls endMeeting on the bigbluebutton server
-		$response = BigBlueButton::endMeeting($meetingID."[".$meetingVersion."]", $moderatorPW, $url_val, $salt_val );
+			//Calls endMeeting on the bigbluebutton server
+			$response = BigBlueButton::endMeeting($meetingID."[".$meetingVersion."]", $moderatorPW, $url_val, $salt_val );
+				
+			//Analyzes the bigbluebutton server's response
+			if(!$response){//If the server is unreachable, then prompts the user of the necessary action
+				echo '<div class="updated"><p><strong>Unable to delete the meeting. Please check the url of the bigbluebutton server AND check to see if the bigbluebutton server is running.</strong></p></div>';
+			}
+			else if( $response['returncode'] != 'SUCCESS' && $response['messageKey'] != 'notFound' ) { //If the meeting was unable to be deleted due to an error
+				if($response['messageKey'] == 'checksumError'){
+					echo '<div class="updated"><p><strong>A checksum error occured. Make sure you entered the correct salt.</strong></p></div>';
+				}
+				else{
+					echo '<div class="updated"><p><strong>'.$response['message'].'</strong></p></div>';
+				}
+			}
+			else { //The meeting was terminated
+				$wpdb->query("DELETE FROM ".$table_name." WHERE meetingID = '".$meetingID."'");
+				echo '<div class="updated"><p><strong>'.$meetingID.' meeting has been deleted.</strong></p></div>';
+			}
 			
-		//Analyzes the bigbluebutton server's response
-		if(!$response){//If the server is unreachable, then prompts the user of the necessary action
-			echo '<div class="updated"><p><strong>Unable to delete the meeting. Please check the url of the bigbluebutton server AND check to see if the bigbluebutton server is running.</strong></p></div>';
 		}
-		else if( $response['returncode'] != 'SUCCESS' && $response['messageKey'] != 'notFound' ) { //If the meeting was unable to be deleted due to an error
-			if($response['messageKey'] == 'checksumError'){
-				echo '<div class="updated"><p><strong>A checksum error occured. Make sure you entered the correct salt.</strong></p></div>';
-			}
-			else{
-				echo '<div class="updated"><p><strong>'.$response['message'].'</strong></p></div>';
-			}
-		}
-		else { //The meeting was terminated
-			$wpdb->query("DELETE FROM ".$table_name." WHERE meetingID = '".$meetingID."'");
-			echo '<div class="updated"><p><strong>'.$meetingID.' meeting has been deleted.</strong></p></div>';
-		}
-		
-    }
+	}
 
 	
 	//Gets all the meetings from the wordpress db
@@ -699,9 +641,6 @@ function bbb_list_meetings() {
 			?>
 			<form name="form1" method="post" action="">
 				<input type="hidden" name="<?php echo $meetingID_name; ?>" value="<?php echo $meeting->meetingID; ?>">
-				<input type="hidden" name="<?php echo $meetingVersion_name; ?>" value="<?php echo $meeting->meetingVersion; ?>">
-				<input type="hidden" name="<?php echo $moderatorPW_name; ?>" value="<?php echo $meeting->moderatorPW; ?>">
-				<input type="hidden" name="<?php echo $attendeePW_name; ?>" value="<?php echo $meeting->attendeePW; ?>">
 				<tr>
 					<td><?php echo $meeting->meetingID; ?></td>
 					<td><?php echo $meeting->attendeePW; ?></td>
@@ -722,13 +661,9 @@ function bbb_list_meetings() {
 				$printed = true;
 			}
 			
-			$bbb_joinURL = BigBlueButton::joinAsViewer($meeting->meetingID."[".$meeting->meetingVersion."]", $current_user->display_name,'', $meeting->moderatorPW, $salt_val, $url_val );
 			?>
 			<form name="form1" method="post" action="">
 				<input type="hidden" name="<?php echo $meetingID_name; ?>" value="<?php echo $meeting->meetingID; ?>">
-				<input type="hidden" name="<?php echo $meetingVersion_name; ?>" value="<?php echo $meeting->meetingVersion; ?>">
-				<input type="hidden" name="<?php echo $moderatorPW_name; ?>" value="<?php echo $meeting->moderatorPW; ?>">
-				<input type="hidden" name="<?php echo $attendeePW_name; ?>" value="<?php echo $meeting->attendeePW; ?>">
 				<tr>
 				
 					<td><?php echo $meeting->meetingID; ?></td>
@@ -744,7 +679,7 @@ function bbb_list_meetings() {
 						if($info['hasBeenForciblyEnded']=='false'){
 							?>
 								<td>
-									<a href ="<?php echo $bbb_joinURL; ?>" class="button-primary" >Join</a>
+									<input type="submit" name="Submit" class="button-primary" value="Join" />
 									<input type="submit" name="Submit" class="button-primary" value="End" />
 									<input type="submit" name="Submit" class="button-primary" value="Delete" />
 								</td>
@@ -833,9 +768,8 @@ function bbb_create_meetings() {
 			//If the meeting doesn't exist in the wordpress database then create it
 			if(!$alreadyExists){ 
 			
-				$rows_affected = $wpdb->insert( $table_name, array( 'meetingID' => $meetingID, 'meetingVersion' => 0, 'attendeePW' => $attendeePW, 'moderatorPW' => $moderatorPW) );
+				$rows_affected = $wpdb->insert( $table_name, array( 'meetingID' => $meetingID, 'meetingVersion' => time(), 'attendeePW' => $attendeePW, 'moderatorPW' => $moderatorPW) );
 				
-				//$bbb_joinURL = BigBlueButton::createMeeting($current_user->display_name, $meetingID, '', $moderatorPW, $attendeePW, $salt_val, $url_val, get_option('siteurl'));
 				?><div class="updated"><p><strong><?php echo "Meeting Room Created."; ?></strong></p></div><?php
 			}
 			
@@ -870,9 +804,5 @@ function bbb_create_meetings() {
 	<hr />
 
 	<?php
-
-
 }
-
-
 ?>
