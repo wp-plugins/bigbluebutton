@@ -4,7 +4,7 @@ Donate link: http://blindsidenetworks.com/integration
 Tags: blindsidenetworks, bigbluebutton, opensource, web, conferencing,
 Requires at least: 3.0.1
 Tested up to: 3.0.1
-Stable tag: 1.0.2
+Stable tag: 1.0.1
 
 This plugin integrates BigBlueButton functionality into Wordpress. 
 
