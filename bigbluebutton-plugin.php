@@ -112,7 +112,7 @@ if (!class_exists("bigbluebuttonPlugin")) {
 			//If the salt and url already exist then no need to rewrite them with the default BigBlueButton test server url and salt
 			$salt_val = get_option("mt_salt");
 			$url_val = get_option("mt_bbb_url");
-			if($salt_val || $url_val || $salt_val == "" || $url_val == ""){
+			if(!$salt_val || !$url_val || $salt_val == "" || $url_val == ""){
 				update_option( "mt_bbb_url", "http://test-install.blindsidenetworks.com/bigbluebutton/" );
 				update_option( "mt_salt", "8cd8ef52e8e101574e400365b55e11a6" );
 			}
