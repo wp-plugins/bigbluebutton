@@ -79,7 +79,7 @@ if (!class_exists("bigbluebuttonPlugin")) {
 		//Sets up the bigbluebutton table to store meetings in the wordpress database
 		function bbb_db_install () {
 			
-			global $wpdb, $bbb_db_version;
+			global $wpdb, $bbb_db_version, $salt_name, $url_name;
 			$bbb_db_version = "1.0.2";
 			
 			//Sets the name of the table
@@ -90,13 +90,19 @@ if (!class_exists("bigbluebuttonPlugin")) {
 				//to reflect the chances
 				$installed_ver = get_option("bbb_db_version");
 				if( $installed_ver != $bbb_db_version ) {
+				
+					//retrieves the value for wait for moderator to be assigned to all meetings already created.
+					$waitForModerator = get_option('mt_waitForModerator');
+					if( $waitForModerator && $waitForModerator == "yes"){ $waitForModerator = "True"; }
+					else { $waitForModerator = "False"; }
+					
 					$sql = "CREATE TABLE " . $table_name . " (
 					id mediumint(9) NOT NULL AUTO_INCREMENT,
 					meetingID text NOT NULL,
 					meetingVersion int NOT NULL,
 					attendeePW text NOT NULL,
 					moderatorPW text NOT NULL,
-					waitForModerator BOOLEAN NOT NULL,
+					waitForModerator BOOLEAN NOT NULL default ".$waitForModerator.",
 					UNIQUE KEY id (id)
 					);";
 
@@ -104,18 +110,16 @@ if (!class_exists("bigbluebuttonPlugin")) {
 					dbDelta($sql);
 
 					update_option( "bbb_db_version", $bbb_db_version );
+					delete_option('mt_waitForModerator'); //deletes this option because it is no longer needed, it has been incorportated into the table.
 					
 				}
+				
+				
+				
 			}
 			
-			
-			//If the salt and url already exist then no need to rewrite them with the default BigBlueButton test server url and salt
-			$salt_val = get_option("mt_salt");
-			$url_val = get_option("mt_bbb_url");
-			if(!$salt_val || !$url_val || $salt_val == "" || $url_val == ""){
-				update_option( "mt_bbb_url", "http://test-install.blindsidenetworks.com/bigbluebutton/" );
-				update_option( "mt_salt", "8cd8ef52e8e101574e400365b55e11a6" );
-			}
+			if( !get_option('mt_bbb_url') ) update_option( "mt_bbb_url", "http://test-install.blindsidenetworks.com/bigbluebutton/" );
+            if( !get_option('mt_salt') ) update_option( "mt_salt", "8cd8ef52e8e101574e400365b55e11a6" );
 		
 		}
 			
