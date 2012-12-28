@@ -3,7 +3,7 @@
 Plugin Name: BigBlueButton
 Plugin URI: http://blindsidenetworks.com/integration
 Description: BigBlueButton is an open source web conferencing system. This plugin integrates BigBlueButton into WordPress allowing bloggers to create and manage meetings rooms to interact with their readers. For more information on setting up your own BigBlueButton server or for using an external hosting provider visit http://bigbluebutton.org/support
-Version: 1.3.1
+Version: 1.3.2
 Author: Blindside Networks
 Author URI: http://blindsidenetworks.com/
 License: GPLv2 or later
@@ -21,10 +21,14 @@ if(version_compare($wp_version, "2.5", "<")) {
     exit($exit_msg);
 }
 
-//constant definitions
+//constant definition
 define("BIGBLUEBUTTON_DIR", WP_PLUGIN_URL . '/bigbluebutton/' );
 define('BIGBLUEBUTTON_PLUGIN_VERSION', bigbluebutton_get_version());
 define('BIGBLUEBUTTON_PLUGIN_URL', plugin_dir_url( __FILE__ ));
+
+//constant message definition
+define('BIGBLUEBUTTON_STRING_WELCOME', '<br>Welcome to <b>%%CONFNAME%%</b>!<br><br>To understand how BigBlueButton works see our <a href="event:http://www.bigbluebutton.org/content/videos"><u>tutorial videos</u></a>.<br><br>To join the audio bridge click the headset icon (upper-left hand corner). <b>Please use a headset to avoid causing noise for others.</b>');
+define('BIGBLUEBUTTON_STRING_MEETING_RECORDED', '<br><br>This session is being recorded.');
 
 //================================================================================
 //------------------Required Libraries and Global Variables-----------------------
@@ -57,7 +61,6 @@ register_uninstall_hook(__FILE__, 'bigbluebutton_uninstall' ); //Runs the uninst
 
 //shortcode definitions
 add_shortcode('bigbluebutton', 'bigbluebutton_shortcode');
-add_shortcode('bigbluebutton_test', 'bigbluebutton_test_shortcode');
 add_shortcode('bigbluebutton_recordings', 'bigbluebutton_recordings_shortcode');
 
 //action definitions
@@ -65,7 +68,7 @@ add_action('init', 'bigbluebutton_init_sessions');
 add_action('init', 'bigbluebutton_init_scripts');
 add_action('admin_menu', 'bigbluebutton_add_pages', 1);
 add_action('admin_init', 'bigbluebutton_admin_init', 1);
-add_action('plugins_loaded', 'bigbluebutton_update_check' );
+add_action('plugins_loaded', 'bigbluebutton_update' );
 add_action('plugins_loaded', 'bigbluebutton_widget_init' );
 set_error_handler("bigbluebutton_warning_handler", E_WARNING);
 
@@ -117,43 +120,9 @@ function bigbluebutton_add_pages() {
 
 //Sets up the bigbluebutton table to store meetings in the wordpress database
 function bigbluebutton_install () {
-     
-    global $wpdb;
-
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-
-    //Sets the name of the table
-    $table_name = $wpdb->prefix . "bigbluebutton";
-    $table_logs_name = $wpdb->prefix . "bigbluebutton_logs";
-
     //Installation code
     if( !get_option('bigbluebutton_plugin_version') ){
-        ////////////////// Create Database //////////////////
-        $sql = "CREATE TABLE " . $table_name . " (
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        meetingID text NOT NULL,
-        meetingName text NOT NULL,
-        meetingVersion int NOT NULL,
-        attendeePW text NOT NULL,
-        moderatorPW text NOT NULL,
-        waitForModerator BOOLEAN NOT NULL DEFAULT FALSE,
-        recorded BOOLEAN NOT NULL DEFAULT FALSE,
-        UNIQUE KEY id (id)
-        );";
-
-        dbDelta($sql);
-
-        $sql = "CREATE TABLE " . $table_logs_name . " (
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        meetingID text NOT NULL,
-        recorded BOOLEAN NOT NULL DEFAULT FALSE,
-        timestamp int NOT NULL,
-        event text NOT NULL,
-        UNIQUE KEY id (id)
-        );";
-
-        dbDelta($sql);
-
+        bigbluebutton_init_database();
     }
      
     ////////////////// Initialize Settings //////////////////
@@ -164,17 +133,83 @@ function bigbluebutton_install () {
     
 }
 
-function bigbluebutton_update_check() {
+//Creates the bigbluebutton tables in the wordpress database
+function bigbluebutton_init_database(){
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    
+    global $wpdb;
+    
+    //Sets the name of the table
+    $table_name = $wpdb->prefix . "bigbluebutton";
+    $table_logs_name = $wpdb->prefix . "bigbluebutton_logs";
+
+    //Execute sql
+    $sql = "CREATE TABLE " . $table_name . " (
+    id mediumint(9) NOT NULL AUTO_INCREMENT,
+    meetingID text NOT NULL,
+    meetingName text NOT NULL,
+    meetingVersion int NOT NULL,
+    attendeePW text NOT NULL,
+    moderatorPW text NOT NULL,
+    waitForModerator BOOLEAN NOT NULL DEFAULT FALSE,
+    recorded BOOLEAN NOT NULL DEFAULT FALSE,
+    UNIQUE KEY id (id)
+    );";
+    dbDelta($sql);
+    
+    $sql = "CREATE TABLE " . $table_logs_name . " (
+    id mediumint(9) NOT NULL AUTO_INCREMENT,
+    meetingID text NOT NULL,
+    recorded BOOLEAN NOT NULL DEFAULT FALSE,
+    timestamp int NOT NULL,
+    event text NOT NULL,
+    UNIQUE KEY id (id)
+    );";
+    dbDelta($sql);
+    
+}
+
+function bigbluebutton_update() {
     global $wpdb;
      
     //Sets the name of the table
     $table_name = $wpdb->prefix . "bigbluebutton";
     $table_logs_name = $wpdb->prefix . "bigbluebutton_logs";
 
-    ////////////////// Updates for version 1.3.1 and larter //////////////////
+    ////////////////// Updates for version 1.3.1 and earlier //////////////////
     $bigbluebutton_plugin_version_installed = get_option('bigbluebutton_plugin_version');
-    if( $bigbluebutton_plugin_version_installed && strcmp($bigbluebutton_plugin_version_installed, "1.3.1") == 0 ){
-         
+    if( !$bigbluebutton_plugin_version_installed                                                             //It's 1.0.2 or earlier
+     || (strcmp("1.3.1", $bigbluebutton_plugin_version_installed) <= 0 && get_option("bbb_db_version")) ){   //It's 1.3.1 not updated
+        ////////////////// Update Database //////////////////
+        /// Initialize database will create the tables added for the new version
+        bigbluebutton_init_database();
+        /// Transfer the data from old table to the new one
+        $table_name_old = $wpdb->prefix . "bbb_meetingRooms";
+        $listOfMeetings = $wpdb->get_results("SELECT * FROM ".$table_name_old." ORDER BY id");
+        foreach ($listOfMeetings as $meeting) {
+            $sql = "INSERT INTO " . $table_name . " (meetingID, meetingName, meetingVersion, attendeePW, moderatorPW) VALUES ('".sha1($meeting->meetingID.strval($meeting->meetingVersion))."','".$meeting->meetingID."', '".$meeting->meetingVersion."', '".$meeting->attendeePW."', '".$meeting->moderatorPW."');";
+            $wpdb->query($sql);
+        }
+        /// Remove the old table 
+        $wpdb->query("DROP TABLE IF EXISTS $table_name_old");
+        
+        ////////////////// Update Settings //////////////////
+        if( !get_option('mt_bbb_url') ) {
+            update_option( 'bigbluebutton_url', 'http://test-install.blindsidenetworks.com/bigbluebutton/' );
+        } else {
+            update_option( 'bigbluebutton_url', get_option('mt_bbb_url') );
+            delete_option('mt_bbb_url');
+        }
+        
+        if( !get_option('mt_salt') ) {
+            update_option( 'bigbluebutton_salt', '8cd8ef52e8e101574e400365b55e11a6' );
+        } else {
+            update_option( 'bigbluebutton_salt', get_option('mt_salt') );
+            delete_option('mt_salt');
+        }
+        
+        delete_option('mt_waitForModerator'); //deletes this option because it is no longer needed, it has been incorportated into the table.
+        delete_option('bbb_db_version'); //deletes this option because it is no longer needed, the versioning pattern has changed.
     }
      
     if( $bigbluebutton_plugin_version_installed && strcmp($bigbluebutton_plugin_version_installed, "1.3.2") == 0 ){
@@ -265,8 +300,6 @@ function bigbluebutton_sidebar($args) {
 }
 
 //================================================================================
-//---------------------------------Widget-----------------------------------------
-//================================================================================
 //Create the form called by the Shortcode and Widget functions
 
 function bigbluebutton_form($args) {
@@ -296,8 +329,10 @@ function bigbluebutton_form($args) {
 
         $found = $wpdb->get_row("SELECT * FROM ".$table_name." WHERE meetingID = '".$meetingID."'");
         if($found->meetingID == $meetingID && ($found->moderatorPW == $password || $found->attendeePW == $password) ){
-            
             //Extra parameters
+            $recorded = $found->recorded;
+            $welcome = (isset($args['welcome']))? html_entity_decode($args['welcome']): BIGBLUEBUTTON_STRING_WELCOME;
+            if( $recorded ) $welcome .= BIGBLUEBUTTON_STRING_MEETING_RECORDED;
             $duration = 0;
             $voicebridge = 0;
             //Metadata for tagging recordings
@@ -308,7 +343,7 @@ function bigbluebutton_form($args) {
                 //'originnameserver' => get_current_site_name( $current_site )
             );
             //Call for creating meeting on the bigbluebutton server
-            $response = BigBlueButton::createMeetingArray($name, $found->meetingID, $found->meetingName, "", $found->moderatorPW, $found->attendeePW, $salt_val, $url_val, get_option('siteurl'), $recorded? 'true':'false', $duration, $voicebridge, $metadata );
+            $response = BigBlueButton::createMeetingArray($name, $found->meetingID, $found->meetingName, $welcome, $found->moderatorPW, $found->attendeePW, $salt_val, $url_val, get_option('siteurl'), $recorded? 'true':'false', $duration, $voicebridge, $metadata );
 
             //Analyzes the bigbluebutton server's response
             if(!$response || $response['returncode'] == 'FAILED' ){//If the server is unreachable, or an error occured
@@ -515,7 +550,7 @@ function bigbluebutton_general_settings() {
 
     echo '
         <form name="form1" method="post" action="">
-          <p>URL of BigBlueButton server:<input type="text" name="bigbluebutton_url" value="'.$url_val.'" size="60"> eg. \'http://test-install.blindsidenetworks.com/\'
+          <p>URL of BigBlueButton server:<input type="text" name="bigbluebutton_url" value="'.$url_val.'" size="60"> eg. \'http://test-install.blindsidenetworks.com/bigbluebutton/\'
           </p>
           <p>Salt of BigBlueButton server:<input type="text" name="bigbluebutton_salt" value="'.$salt_val.'" size="40"> It can be found in /var/lib/tomcat6/webapps/bigbluebutton/WEB-INF/classes/bigbluebutton.properties. eg. \'8cd8ef52e8e101574e400365b55e11a6\'.
           </p>
@@ -578,7 +613,9 @@ function bigbluebutton_list_meetings() {
             );
             
             //Calls create meeting on the bigbluebutton server
-            $response = BigBlueButton::createMeetingArray($current_user->display_name, $meetingID, $meetingName, "", $moderatorPW, $attendeePW, $salt_val, $url_val, get_option('siteurl'), ($recorded? 'true':'false'), $duration, $voicebridge, $metadata );
+            $welcome = BIGBLUEBUTTON_STRING_WELCOME;
+            if( $recorded ) $welcome .= BIGBLUEBUTTON_STRING_MEETING_RECORDED;
+            $response = BigBlueButton::createMeetingArray($current_user->display_name, $meetingID, $meetingName, $welcome, $moderatorPW, $attendeePW, $salt_val, $url_val, get_option('siteurl'), ($recorded? 'true':'false'), $duration, $voicebridge, $metadata );
             
             $createNew = false;
             //Analyzes the bigbluebutton server's response
