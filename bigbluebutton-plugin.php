@@ -371,34 +371,8 @@ function bigbluebutton_sidebar($args) {
 
 }
 
-
-function bigbluebutton_can_participate($role){
-    $permissions = get_option('bigbluebutton_permissions');
-    if( $role == 'unregistered' ) $role = 'anonymous';
-    return ( isset($permissions[$role]['participate']) && $permissions[$role]['participate'] );
-    
-}
-
-function bigbluebutton_can_manageRecordings($role){
-    $permissions = get_option('bigbluebutton_permissions');
-    if( $role == 'unregistered' ) $role = 'anonymous';
-    return ( isset($permissions[$role]['manageRecordings']) && $permissions[$role]['manageRecordings'] );
-
-}
-
-function bigbluebutton_validate_defaultRole($wp_role, $bbb_role){
-    $permissions = get_option('bigbluebutton_permissions');
-    if( $wp_role == null || $wp_role == 'unregistered' || $wp_role == '' ) 
-        $role = 'anonymous';
-    else
-        $role = $wp_role;
-    return ( isset($permissions[$role]['defaultRole']) && $permissions[$role]['defaultRole'] == $bbb_role );
-}
-
-
 //================================================================================
 //Create the form called by the Shortcode and Widget functions
-
 function bigbluebutton_form($args) {
     global $wpdb, $wp_version, $current_site, $current_user, $wp_roles;
     $table_name = $wpdb->prefix . "bigbluebutton";
@@ -1308,3 +1282,33 @@ function bigbluebutton_print_table_header(){
                 <th class="hedextra" colspan="1">Actions</td>
               </tr>';
 }
+
+//================================================================================
+//------------------------------- Helping functions ------------------------------
+//================================================================================
+//Validation methods
+function bigbluebutton_can_participate($role){
+    $permissions = get_option('bigbluebutton_permissions');
+    if( $role == 'unregistered' ) $role = 'anonymous';
+    return ( isset($permissions[$role]['participate']) && $permissions[$role]['participate'] );
+
+}
+
+function bigbluebutton_can_manageRecordings($role){
+    $permissions = get_option('bigbluebutton_permissions');
+    if( $role == 'unregistered' ) $role = 'anonymous';
+    return ( isset($permissions[$role]['manageRecordings']) && $permissions[$role]['manageRecordings'] );
+
+}
+
+function bigbluebutton_validate_defaultRole($wp_role, $bbb_role){
+    $permissions = get_option('bigbluebutton_permissions');
+    if( $wp_role == null || $wp_role == 'unregistered' || $wp_role == '' )
+        $role = 'anonymous';
+    else
+        $role = $wp_role;
+    return ( isset($permissions[$role]['defaultRole']) && $permissions[$role]['defaultRole'] == $bbb_role );
+}
+
+
+
