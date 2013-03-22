@@ -439,15 +439,19 @@ function bigbluebutton_form($args) {
             if( $recorded ) $welcome .= BIGBLUEBUTTON_STRING_MEETING_RECORDED;
             $duration = 0;
             $voicebridge = 0;
+            $logouturl = (is_ssl()? "https://": "http://") . $_SERVER['HTTP_HOST']  . $_SERVER['REQUEST_URI'];
+            
             //Metadata for tagging recordings
             $metadata = Array(
-                'origin' => 'Wordpress',
-                'originversion' => $wp_version,
-                'origintag' => 'wordpress-plugin_bigbluebutton '.BIGBLUEBUTTON_PLUGIN_VERSION,
-                //'originnameserver' => get_current_site_name( $current_site )
+                'meta_origin' => 'WordPress',
+                'meta_originversion' => $wp_version,
+                'meta_origintag' => 'wp_plugin-bigbluebutton '.BIGBLUEBUTTON_PLUGIN_VERSION,
+                'meta_originservername' => home_url(),
+                'meta_originservercommonname' => get_bloginfo('name'),
+                'meta_originurl' => $logouturl
             );
             //Call for creating meeting on the bigbluebutton server
-            $response = BigBlueButton::createMeetingArray($name, $found->meetingID, $found->meetingName, $welcome, $found->moderatorPW, $found->attendeePW, $salt_val, $url_val, get_option('siteurl'), $recorded? 'true':'false', $duration, $voicebridge, $metadata );
+            $response = BigBlueButton::createMeetingArray($name, $found->meetingID, $found->meetingName, $welcome, $found->moderatorPW, $found->attendeePW, $salt_val, $url_val, $logouturl, $recorded? 'true':'false', $duration, $voicebridge, $metadata );
 
             //Analyzes the bigbluebutton server's response
             if(!$response || $response['returncode'] == 'FAILED' ){//If the server is unreachable, or an error occured
@@ -911,19 +915,22 @@ function bigbluebutton_list_meetings() {
             //Extra parameters
             $duration = 0;
             $voicebridge = 0;
+            $logouturl = (is_ssl()? "https://": "http://") . $_SERVER['HTTP_HOST']  . $_SERVER['REQUEST_URI'];
+            
             //Metadata for tagging recordings
             $metadata = array(
                 'meta_origin' => 'WordPress',
                 'meta_originversion' => $wp_version,
                 'meta_origintag' => 'wp_plugin-bigbluebutton '.BIGBLUEBUTTON_PLUGIN_VERSION,
-                'meta_originservername' => get_option('siteurl'),
+                'meta_originservername' => home_url(),
                 'meta_originservercommonname' => get_bloginfo('name'),
+                'meta_originurl' => $logouturl
             );
             
             //Calls create meeting on the bigbluebutton server
             $welcome = BIGBLUEBUTTON_STRING_WELCOME;
             if( $recorded ) $welcome .= BIGBLUEBUTTON_STRING_MEETING_RECORDED;
-            $response = BigBlueButton::createMeetingArray($current_user->display_name, $meetingID, $meetingName, $welcome, $moderatorPW, $attendeePW, $salt_val, $url_val, get_option('siteurl'), ($recorded? 'true':'false'), $duration, $voicebridge, $metadata );
+            $response = BigBlueButton::createMeetingArray($current_user->display_name, $meetingID, $meetingName, $welcome, $moderatorPW, $attendeePW, $salt_val, $url_val, $logouturl, ($recorded? 'true':'false'), $duration, $voicebridge, $metadata );
             
             $createNew = false;
             //Analyzes the bigbluebutton server's response
