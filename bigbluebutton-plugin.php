@@ -1228,9 +1228,9 @@ function bigbluebutton_list_recordings($title=null) {
         }
         
         /// Prepare duration
-        $endTime = isset($recording['endTime'])? intval(str_replace('"', '\"', $recording['endTime'])):0;
+        $endTime = isset($recording['endTime'])? floatval($recording['endTime']):0;
         $endTime = $endTime - ($endTime % 1000);
-        $startTime = isset($recording['startTime'])? intval(str_replace('"', '\"', $recording['startTime'])):0;
+        $startTime = isset($recording['startTime'])? floatval($recording['startTime']):0;
         $startTime = $startTime - ($startTime % 1000);
         $duration = intval(($endTime - $startTime) / 60000);
         
