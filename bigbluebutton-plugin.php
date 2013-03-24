@@ -62,7 +62,6 @@ register_uninstall_hook(__FILE__, 'bigbluebutton_uninstall' ); //Runs the uninst
 //shortcode definitions
 add_shortcode('bigbluebutton', 'bigbluebutton_shortcode');
 add_shortcode('bigbluebutton_recordings', 'bigbluebutton_recordings_shortcode');
-add_shortcode('bigbluebutton_test', 'bigbluebutton_test_shortcode');
 
 //action definitions
 add_action('init', 'bigbluebutton_init_sessions');
@@ -378,8 +377,8 @@ function bigbluebutton_sidebar($args) {
     echo $before_title.'BigBlueButton'.$after_title;
     echo $after_widget;
     
-    bigbluebutton_form($args);
-
+    echo bigbluebutton_form($args);
+    
 }
 
 //================================================================================
@@ -644,13 +643,18 @@ function bigbluebutton_general_options() {
         wp_die( __('You do not have sufficient permissions to access this page.') );
     }
 
+    echo bigbluebutton_general_settings();
     /* If the bigbluebutton server url and salt are empty then it does not
      display the create meetings, and list meetings sections.*/
-    if (bigbluebutton_general_settings()){
-
-        bigbluebutton_permission_settings();
+    $url_val = get_option('bigbluebutton_url');
+    $salt_val = get_option('bigbluebutton_salt');
+    if($url_val == '' || $salt_val == ''){
+        $out .= '</div>';
         
-        bigbluebutton_create_meetings();
+    } else {
+        echo bigbluebutton_permission_settings();
+        
+        echo bigbluebutton_create_meetings();
 
         echo bigbluebutton_list_meetings();
 
@@ -666,9 +670,12 @@ function bigbluebutton_general_options() {
 // The page allows the user specifies the url of the bigbluebutton server and its salt
 function bigbluebutton_general_settings() {
 
+    //Initializes the variable that will collect the output
+    $out = '';
+    
     //Displays the title of the page
-    echo '<div class="wrap">';
-    echo "<h2>BigBlueButton General Settings</h2>";
+    $out .= '<div class="wrap">';
+    $out .= "<h2>BigBlueButton General Settings</h2>";
 
     $url_val = get_option('bigbluebutton_url');
     $salt_val = get_option('bigbluebutton_salt');
@@ -695,16 +702,16 @@ function bigbluebutton_general_settings() {
         update_option('bigbluebutton_salt', $salt_val );
 
         // Put an settings updated message on the screen
-        echo '<div class="updated"><p><strong>Settings saved.</strong></p></div>';
+        $out .= '<div class="updated"><p><strong>Settings saved.</strong></p></div>';
 
     }
 
     if($url_val == "http://test-install.blindsidenetworks.com/bigbluebutton/" ){
-        echo '<div class="updated"><p><strong>You are using a test BigBlueButton server provided by <a href="http://blindsidenetworks.com/" target="_blank">Blindside Networks</a>. For more information on setting up your own BigBlueButton server see <i><a href="http://bigbluebutton.org/support" target="_blank">http://bigbluebutton.org/support.</a></i></strong></div>';
+        $out .= '<div class="updated"><p><strong>You are using a test BigBlueButton server provided by <a href="http://blindsidenetworks.com/" target="_blank">Blindside Networks</a>. For more information on setting up your own BigBlueButton server see <i><a href="http://bigbluebutton.org/support" target="_blank">http://bigbluebutton.org/support.</a></i></strong></div>';
     }
     //Form to update the url of the bigbluebutton server, and it`s salt
 
-    echo '
+    $out .= '
         <form name="form1" method="post" action="">
           <p>URL of BigBlueButton server:<input type="text" name="bigbluebutton_url" value="'.$url_val.'" size="60"> eg. \'http://test-install.blindsidenetworks.com/bigbluebutton/\'
           </p>
@@ -718,14 +725,7 @@ function bigbluebutton_general_settings() {
         </form>
         <hr />';
 
-    //Checks to see if the url and salt are empty. If they are then
-    //the create meetings, and list meetings sections are not displayed
-    if($url_val == '' || $salt_val == ''){
-        echo '</div>';
-        return false;
-    }
-
-    return true;
+    return $out;
 
 }
 
@@ -737,6 +737,9 @@ function bigbluebutton_permission_settings() {
     global $wp_roles;
     $roles = $wp_roles->role_names;
     $roles['anonymous'] = 'Anonymous';
+
+    //Initializes the variable that will collect the output
+    $out = '';
     
     if( isset($_POST['SubmitPermissions']) && $_POST['SubmitPermissions'] == 'Save Permissions' ) {
         foreach($roles as $key => $value) {
@@ -774,11 +777,11 @@ function bigbluebutton_permission_settings() {
     }
     
     //Displays the title of the page
-    echo "<h2>BigBlueButton Permission Settings</h2>";
+    $out .= "<h2>BigBlueButton Permission Settings</h2>";
 
-    echo '</br>';
+    $out .= '</br>';
     
-    echo '
+    $out .= '
     <form name="form1" method="post" action="">
       <table class="stats" cellspacing="5">
         <tr>
@@ -791,7 +794,7 @@ function bigbluebutton_permission_settings() {
           </tr>';
     
     foreach($roles as $key => $value) {
-        echo '
+        $out .= '
         <tr>
           <td>'.$value.'</td>
           <td><input type="checkbox" name="'.$value.'-manageRecordings" '.($permissions[$key]['manageRecordings']?'checked="checked"': '').' /></td>
@@ -802,11 +805,13 @@ function bigbluebutton_permission_settings() {
         </tr>';
     }
     
-    echo '
+    $out .= '
       </table>
       <p class="submit"><input type="submit" name="SubmitPermissions" class="button-primary" value="Save Permissions" /></p>
     </form>
     <hr />';
+    
+    return $out;
 
 }
 
@@ -815,9 +820,13 @@ function bigbluebutton_permission_settings() {
 //================================================================================
 //This page allows the user to create a meeting
 function bigbluebutton_create_meetings() {
+    global $wpdb;
 
+    //Initializes the variable that will collect the output
+    $out = '';
+    
     //Displays the title of the page
-    echo "<h2>Create a Meeting Room</h2>";
+    $out .= "<h2>Create a Meeting Room</h2>";
 
     $url_val = get_option('bigbluebutton_url');
     $salt_val = get_option('bigbluebutton_salt');
@@ -840,7 +849,7 @@ function bigbluebutton_create_meetings() {
         //Checks to see if the meeting name, attendee password or moderator password was left blank
         if($meetingName == '' || $attendeePW == '' || $moderatorPW == ''){
             //If the meeting name was left blank, the user is prompted to fill it out
-            echo '<div class="updated">
+            $out .= '<div class="updated">
             <p>
             <strong>All fields must be filled.</strong>
             </p>
@@ -850,7 +859,6 @@ function bigbluebutton_create_meetings() {
             $alreadyExists = false;
             	
             //Checks the meeting to be created to see if it already exists in wordpress database
-            global $wpdb;
             $table_name = $wpdb->prefix . "bigbluebutton";
             $listOfMeetings = $wpdb->get_results("SELECT meetingID, meetingName FROM ".$table_name);
             	
@@ -858,7 +866,7 @@ function bigbluebutton_create_meetings() {
                 if($meeting->meetingName == $meetingName){
                     $alreadyExists = true;
                     //Alerts the user to choose a different name
-                    echo '<div class="updated">
+                    $out .= '<div class="updated">
                     <p>
                     <strong>'.$meetingName.' meeting room already exists. Please select a different name.</strong>
                     </p>
@@ -871,7 +879,7 @@ function bigbluebutton_create_meetings() {
             if(!$alreadyExists){
                 $rows_affected = $wpdb->insert( $table_name, array( 'meetingID' => $meetingID, 'meetingName' => $meetingName, 'meetingVersion' => $meetingVersion, 'attendeePW' => $attendeePW, 'moderatorPW' => $moderatorPW, 'waitForModerator' => $waitForModerator? 1: 0, 'recorded' => $recorded? 1: 0) );
 
-                echo '<div class="updated">
+                $out .= '<div class="updated">
                 <p>
                 <strong>Meeting Room Created.</strong>
                 </p>
@@ -888,10 +896,12 @@ function bigbluebutton_create_meetings() {
             $recorded = false;
 
         }
+        
     }
 
     //Form to create a meeting, the fields are the meeting name, and the optional fields are the attendee password and moderator password
-    echo '<form name="form1" method="post" action="">
+    $out .= '
+    <form name="form1" method="post" action="">
     <p>Meeting Room Name: <input type="text" name="meetingName" value="" size="20"></p>
     <p>Attendee Password: <input type="text" name="attendeePW" value="" size="20"></p>
     <p>Moderator Password: <input type="text" name="moderatorPW" value="" size="20"></p>
@@ -901,6 +911,8 @@ function bigbluebutton_create_meetings() {
     </form>
     <hr />';
 
+    return $out;
+    
 }
 
 //================================================================================

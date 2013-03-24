@@ -54,34 +54,40 @@ You should enable the curl extension in php.ini.
 
 == Changelog ==
 
+= 1.3.4 =
+* Fixed issue. List of recordings didn’t show the correct duration on 32-bit servers.
+* Fixed issue. When using short codes, the bigbluebutton content appeared at the very top on the page or post.
+* Fixed issue. For anonymous users the join meeting form was always shown, even though they were allowed to sign without password. 
+
 = 1.3.3 =
 * Changed permissions. Administrator can now set moderator or attendee as default bbb-roles to the different wp-roles available.
 * Changed permissions. Administrator can now set -manageRecordings and -participate permissions to any of the wp-roles available.
 * Changed interface on joining form. If there is only one meeting the selection box is not shown.
-* Fixed an issue on admin UI. Users were prevented to koin meetings using the meeting list.
-* Fixed an issue on installing and version updating functions.
+* Fixed issue. On admin UI users were prevented to join meetings using the meeting list.
+* Fixed issue. When installing and/or updating a version the activate methods were not properly working.
+* Changed logouturl. The logout url is now the page from where the create/join call was made instead of the main page.
 
 = 1.3.2 =
-* Fixed an issue on update control that prevented 1.0.1 deployments to be properly updated
-* Fixed an issue that prevented the plugin to work on webservers running php 5.2
-* Fixed an issue that prevented meetings to be created in recording mode
-* Added a warning to the welcome message on the bigbluebutton chat box when the meeting is recorded
-* A generic welcome message can be set as parameter using the shortcode [bigbluebutton welcome='<br>Custom message<br>%%CONFNAME%%']
+* Fixed an issue on update control that prevented 1.0.1 deployments to be properly updated.
+* Fixed an issue that prevented the plugin to work on webservers running php 5.2.
+* Fixed an issue that prevented meetings to be created in recording mode.
+* Added a warning to the welcome message on the bigbluebutton chat box when the meeting is recorded.
+* A generic welcome message can be set as parameter using the shortcode [bigbluebutton welcome='<br>Custom message<br>%%CONFNAME%%'].
   
 = 1.3.1 =
-* Changed version control. 1:major version (remains),2:minor version (former release version),3:release version
-* Added shortcode [bigbluebutton] to render an access form into a page or post
-* Meetings can be configured to be recorded (optional)
-* Configuration form shows the list of recordings available for the Wordpress server
-* Admin users can publish/unpublish and delete recordings from the BigBlueButton server
-* Added shortcode [bigbluebutton_recordings] to render the list of recordings into a page or post
+* Changed version control. 1:major version (remains),2:minor version (former release version),3:release version.
+* Added shortcode [bigbluebutton] to render an access form into a page or post.
+* Meetings can be configured to be recorded (optional).
+* Configuration form shows the list of recordings available for the Wordpress server.
+* Admin users can publish/unpublish and delete recordings from the BigBlueButton server.
+* Added shortcode [bigbluebutton_recordings] to render the list of recordings into a page or post.
 * Performance improvements
       (Important: This release does not support multi sites and is not localized)
 
 = 1.0.2 =
-* Wait for moderator is now meeting specific
-* Added confirmation messages when ending or deleting a meeting
-* Performance improvements
+* Wait for moderator is now meeting specific.
+* Added confirmation messages when ending or deleting a meeting.
+* Performance improvements.
 
 = 1.0.1 =
 * Updated to use version 1.2 of the php api.
@@ -92,6 +98,12 @@ You should enable the curl extension in php.ini.
 * Added the initial files.
 
 == Upgrade Notice ==
+
+= 1.3.4 =
+This version fixes some presentation issues.
+
+= 1.3.3 =
+This version enable administrators to set permissions for accessing meetings. It also fixes few issues on deployments.
 
 = 1.3.2 =
 This version fixes an issue on deployments made on webservers with php 5.2, a bug on the update control and a bug that prevented meetings to be created in recording mode.
