@@ -57,7 +57,9 @@ You should enable the curl extension in php.ini.
 = 1.3.4 =
 * Fixed issue. List of recordings didn’t show the correct duration on 32-bit servers.
 * Fixed issue. When using short codes, the bigbluebutton content appeared at the very top on the page or post.
-* Fixed issue. For anonymous users the join meeting form was always shown, even though they were allowed to sign without password. 
+* Fixed issue. For anonymous users the join meeting form was always shown, even though they were allowed to sign without password.
+* Added feature. Title on recording list can be set up using a shortcode parameter [bigbluebutton_recordings title='Example']. 
+* Added feature. Included classes and ids to the html tags for enable designers to add style.  
 
 = 1.3.3 =
 * Changed permissions. Administrator can now set moderator or attendee as default bbb-roles to the different wp-roles available.
@@ -100,7 +102,7 @@ You should enable the curl extension in php.ini.
 == Upgrade Notice ==
 
 = 1.3.4 =
-This version fixes some presentation issues.
+This version fixes some presentation issues. Style and javascript functions can added using classes and ids included on html elements.
 
 = 1.3.3 =
 This version enable administrators to set permissions for accessing meetings. It also fixes few issues on deployments.

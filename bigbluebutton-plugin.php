@@ -356,15 +356,6 @@ function bigbluebutton_recordings_shortcode($args) {
 
 }
 
-function bigbluebutton_test_shortcode($args) {
-    extract($args);
-
-    $out = '<div>Hello world!</div>';
-    
-    return $out;
-
-}
-
 
 //================================================================================
 //---------------------------------Widget-----------------------------------------
@@ -514,7 +505,8 @@ function bigbluebutton_form($args) {
         
         if ( bigbluebutton_can_participate($role) ){
             $out .= '
-          <form name="form1" method="post" action="">
+          <form id="bbb-join-form" class="bbb-join" name="form1" method="post" action="">
+            <div class="bbb-join">
             <table>';
             
             if(sizeof($listOfMeetings) > 1){
@@ -522,7 +514,7 @@ function bigbluebutton_form($args) {
               <tr>
                 <td>Meeting</td>
                 <td>
-                  <select name="meetingID">';
+                  <select class="bbb-join" name="meetingID">';
                 
                 foreach ($listOfMeetings as $meeting) {
                     $out .= '
@@ -541,22 +533,25 @@ function bigbluebutton_form($args) {
             
             }
             
-            if( !$current_user->ID || bigbluebutton_validate_defaultRole($role, 'none') ) {
+            if( !$current_user->ID ) {
                 $out .= '
               <tr>
                 <td>Name</td>
-                <td><input type="text" id="name" name="display_name" size="10"></td>
-              </tr>
+                <td><input class="bbb-join" type="text" id="name" name="display_name" size="10"></td>
+              </tr>';
+            }
+            if( bigbluebutton_validate_defaultRole($role, 'none') ) {
+                $out .= '
               <tr>
                 <td>Password</td>
-                <td><input type="password" name="pwd" size="10"></td>
+                <td><input class="bbb-join" type="password" name="pwd" size="10"></td>
               </tr>';
             }
             $out .= '
             </table>';
             if(sizeof($listOfMeetings) > 1){
                 $out .= '
-            <input type="submit" name="SubmitForm" value="Join">';
+            <input id="bbb-join-submit" class="bbb-join" type="submit" name="SubmitForm" value="Join">';
             
             } else {
                 $out .= '
@@ -564,6 +559,7 @@ function bigbluebutton_form($args) {
             
             }
             $out .= '
+            </div>
           </form>';
         
         } else {
@@ -590,7 +586,6 @@ function bigbluebutton_form($args) {
 //the meetingName is the meetingID
 function bigbluebutton_display_redirect_script($bigbluebutton_joinURL, $meetingID, $meetingName, $name){
 
-    
     $out = '
           <script type="text/javascript">
             function bigbluebutton_ping() {
@@ -658,7 +653,7 @@ function bigbluebutton_general_options() {
 
         echo bigbluebutton_list_meetings();
 
-        echo bigbluebutton_list_recordings();
+        echo bigbluebutton_list_recordings('List of Recordings');
 
     }
 
@@ -1172,8 +1167,6 @@ function bigbluebutton_list_recordings($title=null) {
     $_SESSION['mt_bbb_url'] = $url_val;
     $_SESSION['mt_salt'] = $salt_val;
     
-    $title = ($title != null)? $title: 'List of Recordings'; 
-    
     //Gets all the meetings from wordpress database
     $listOfMeetings = $wpdb->get_results("SELECT DISTINCT meetingID FROM ".$table_logs_name." WHERE recorded = 1 ORDER BY timestamp;");
     
@@ -1201,7 +1194,8 @@ function bigbluebutton_list_recordings($title=null) {
     }
 
     //Displays the title of the page
-    $out .= "<h2>".$title."</h2>";
+    if($title)
+        $out .= "<h2>".$title."</h2>";
     
     if ( bigbluebutton_can_manageRecordings($role) ) {
         $out .= '
@@ -1248,7 +1242,7 @@ function bigbluebutton_list_recordings($title=null) {
     
     //Print begining of the table
     $out .= '
-          <div>
+          <div id="bbb-recordings-div" class="bbb-recordings">
             <table class="stats" cellspacing="5">
               <tr>
                 <th class="hed" colspan="1">Recording</td>
