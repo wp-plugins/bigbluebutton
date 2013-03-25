@@ -34,6 +34,29 @@ The easiest way to install is to watch this [installation video](http://www.yout
 
 == Frequently Asked Questions ==
 
+** Ho do I create meetings?
+
+**How users join meetings?**
+
+Users join meetings using a joining form that can be shown in a site as a sidebar element or as a page/post. 
+
+For setting up in the sidebar, add the bigbluebutton widget as you do with any other dragging the box to the position you want to. 
+
+For setting it up as page/post add the shortcode [bigbluebutton] where you want the form to appear in the page/post. If there a meetings pre-created in wordpress, they should appear in a listbox where users can select. If there is only one meeting pre-created there will not be a list box and a button with the name of the meeting will aprear instead.
+ 
+**Why sometimes the Name and Password are required, some others only the Name and others only the Password?**
+
+The plugin gatters the much information it cans from Wordpress, but what will be taken depends of the configuration. 
+
+For registered users their registered name or username will be taken as Name. The BigBlueButton role (moderator/attendee) can be assigned automatically depending of the permission settings. This way a registered user in a role which permissions has been previously set would not be required nether for Name nor Password.
+
+For registered users whose role has ben set for requiring always a password, only the Password will be required.
+
+For anonymous users the Name will be always required, but again the Password requirment will depend of the configuration. If Moderator/Attendee role has ben set for them no Password box will be shown in their joining form.   
+
+**How can I show the recordings?**
+
+The only way to show recordings to users is using the shortcode [bigbluebutton_recordings] in a page/post. 
 
 **Why is it giving an error about creating a meeting room?**
 
