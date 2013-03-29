@@ -1107,8 +1107,7 @@ function bigbluebutton_list_meetings() {
                       <td>'.$meeting->attendeePW.'</td>
                       <td>'.$meeting->moderatorPW.'</td>
                       <td>'.($meeting->waitForModerator? 'Yes': 'No').'</td>
-                      <td>'.($meeting->recorded? 'Yes': 'No').'</td>
-                      <td></td>';
+                      <td>'.($meeting->recorded? 'Yes': 'No').'</td>';
 		    if( isset($info['hasBeenForciblyEnded']) && $info['hasBeenForciblyEnded']=='false'){
 		        $out .= '
 		              <td><input type="submit" name="SubmitList" class="button-primary" value="Join" />&nbsp;
