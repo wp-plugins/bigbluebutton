@@ -1260,7 +1260,11 @@ function bigbluebutton_list_recordings($title=null) {
         /// Prepare playback recording links
         $type = '';
         foreach ( $recording['playbacks'] as $playback ){
-            $type .= '<a href="'.$playback['url'].'" target="_new">'.$playback['type'].'</a>&#32;';
+        	if ($recording['published'] == 'true'){
+            	$type .= '<a href="'.$playback['url'].'" target="_new">'.$playback['type'].'</a>&#32;';
+        	} else {
+        		$type .= $playback['type'].'&#32;';
+        	}
         }
         
         /// Prepare duration
