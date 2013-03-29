@@ -82,16 +82,20 @@ You should enable the curl extension in php.ini.
 * Fixed issue. When using short codes, the bigbluebutton content appeared at the very top on the page or post.
 * Fixed issue. For anonymous users the join meeting form was always shown, even though they were allowed to sign without password.
 * Fixed issue. Recording link broken when the recording is not published
+* Changed meetingId. Wordpress meetingID is no longer the BBB meetingID. Instead a short 13 characters internal token is used to generate the real meetingID.
 * Added feature. Title on recording list can be set up using a shortcode parameter [bigbluebutton_recordings title='Example'].
 * Added feature. Included classes and ids to the html tags for enable designers to add style.
+* Added feature. Password are random generated when not included in create form.
+* Added feature. Extended shortcode can receive token id and submit message [bigbluebutton token="a7ccc7f752f65" submit"Meet me there!"]. [token] can be taken from the list of meeting romms created, when set the join button will link to the specific meeting. [submmit] will override the text in the join button.
 
 = 1.3.3 =
+* Fixed issue. On admin UI users were prevented to join meetings using the meeting list.
+* Fixed issue. When installing and/or updating a version the activate methods were not properly working.
 * Changed permissions. Administrator can now set moderator or attendee as default bbb-roles to the different wp-roles available.
 * Changed permissions. Administrator can now set -manageRecordings and -participate permissions to any of the wp-roles available.
 * Changed interface on joining form. If there is only one meeting the selection box is not shown.
-* Fixed issue. On admin UI users were prevented to join meetings using the meeting list.
-* Fixed issue. When installing and/or updating a version the activate methods were not properly working.
 * Changed logouturl. The logout url is now the page from where the create/join call was made instead of the main page.
+* Added feature. Plugin can be used on multisite deployments.  
 
 = 1.3.2 =
 * Fixed an issue on update control that prevented 1.0.1 deployments to be properly updated.
