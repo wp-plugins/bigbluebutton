@@ -77,7 +77,7 @@ You should enable the curl extension in php.ini.
 
 == Changelog ==
 
-= 1.3.5
+= 1.3.5 =
 * Fixed issue. Meeting could not been deleted.
 * Fixed issue. Meeting could not been added when using non updated MySQL versions.
 
