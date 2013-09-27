@@ -82,6 +82,8 @@ So as an example:
 You should enable the curl extension in php.ini. 
 
 == Changelog ==
+= 1.3.7 =
+* Fixed issue. Password required option not working for registered users. Only for Anonymous.
 
 = 1.3.6 =
 * Added feature. Form presentation can be customized using css.

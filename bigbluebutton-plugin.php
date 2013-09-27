@@ -458,7 +458,11 @@ function bigbluebutton_form($args) {
                 } else {
                     $name = $role;
                 }
-                $password = $permissions[$role]['defaultRole'] == 'moderator'? $found->moderatorPW: $found->attendeePW;
+                if( bigbluebutton_validate_defaultRole($role, 'none') ) {
+                    $password = $_POST['pwd'];
+                } else {
+                    $password = $permissions[$role]['defaultRole'] == 'moderator'? $found->moderatorPW: $found->attendeePW;
+                }
 
             }
 
