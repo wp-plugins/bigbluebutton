@@ -84,6 +84,7 @@ You should enable the curl extension in php.ini.
 == Changelog ==
 = 1.3.7 =
 * Fixed issue. Password required option not working for registered users. Only for Anonymous.
+* Fixed issue. Form was rendered out of bounds when using the widget.
 
 = 1.3.6 =
 * Added feature. Form presentation can be customized using css.

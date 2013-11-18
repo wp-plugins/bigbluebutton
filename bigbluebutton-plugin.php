@@ -384,10 +384,8 @@ function bigbluebutton_sidebar($args) {
 
     echo $before_widget;
     echo $before_title.'BigBlueButton'.$after_title;
-    echo $after_widget;
-
     echo bigbluebutton_form($args);
-
+    echo $after_widget;
 }
 
 //================================================================================
