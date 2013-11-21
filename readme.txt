@@ -106,7 +106,7 @@ You should enable the curl extension in php.ini.
 * Added feature. Title on recording list can be set up using a shortcode parameter [bigbluebutton_recordings title='Example'].
 * Added feature. Included classes and ids to the html tags for enable designers to add style.
 * Added feature. Password are random generated when not included in create form.
-* Added feature. Extended shortcode can receive token id and submit message [bigbluebutton token="a7ccc7f752f65" submit"Meet me there!"]. [token] can be taken from the list of meeting romms created, when set the join button will link to the specific meeting. [submmit] will override the text in the join button.
+* Added feature. Extended shortcode can receive token id and submit message [bigbluebutton token="a7ccc7f752f65" submit"Meet me there!"]. [token] can be taken from the list of meeting rooms created, when set the join button will link to the specific meeting. [submmit] will override the text in the join button.
 
 = 1.3.3 =
 * Fixed issue. On admin UI users were prevented to join meetings using the meeting list.
