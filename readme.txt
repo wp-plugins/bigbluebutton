@@ -4,7 +4,7 @@ Donate link: http://www.blindsidenetworks.com/integrations/wordpress/
 Tags: blindsidenetworks, bigbluebutton, opensource, open source, web, conferencing, webconferencing
 Requires at least: 3.0.1
 Tested up to: 3.7.1
-Stable tag: 1.3.7
+Stable tag: 1.3.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,9 +13,10 @@ This plugin integrates BigBlueButton functionality into Wordpress.
 
 == Description ==
 
-[BigBlueButton](http://bigbluebutton.org/ "BigBlueButton") is an open source web conferencing system. This plugin integrates BigBlueButton into WordPress allowing bloggers to create and manage meetings rooms to interact with their readers.
+[BigBlueButton](http://bigbluebutton.org/ "BigBlueButton") is an open source web conferencing system. This plugin integrates BigBlueButton into WordPress allowing bloggers to create and manage meetings rooms to interact with their readers. It was developed and is maintained by <a href="http://blindsidenetworks.com/" target="_blank">Blindside Networks</a>. 
 
-**For more information on setting up your own BigBlueButton server or for using an external hosting provider visit [http://bigbluebutton.org/support](http://bigbluebutton.org/support "http://bigbluebutton.org/support")**
+For more information on setting up your own BigBlueButton server you can look for <a href="http://bigbluebutton.org/support">community support</a> or if you need personalized assitance or for using an external hosting provider look for <a href="http://bigbluebutton.org/commercial-support" target="_blank">commercial support</a>.  
+
 
 == Installation ==
 
@@ -82,6 +83,9 @@ So as an example:
 You should enable the curl extension in php.ini. 
 
 == Changelog ==
+= 1.3.8 =
+* Fixed issue. The login form was rendered out of the limits when the widget was used in a narrow side column.
+
 = 1.3.7 =
 * Fixed issue. Password required option not working for registered users. Only for Anonymous.
 * Fixed issue. Form was rendered out of bounds when using the widget.
