@@ -81,6 +81,15 @@ So as an example:
 
 You should enable the curl extension in php.ini. 
 
+== Screenshots ==
+
+1. Login form for anonymous users.
+2. Login form for registered users.
+3. General settings.
+4. Permission settings.
+5. Create meeting room form and list of meeting rooms.
+6. Recordings in a front end page.
+
 == Changelog ==
 = 1.3.8 =
 * Fixed issue. The login form was rendered out of the limits when the widget was used in a narrow side column.
