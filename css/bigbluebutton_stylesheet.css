@@ -130,7 +130,7 @@ width:250px;}
   font-size: 14px;
 }
 
-#bbb-join-form-widget input[type=text], #bbb-join-form input[type=password] {
+#bbb-join-form-widget input[type=text], #bbb-join-form-widget input[type=password] {
   color: #777;
   margin: 5px 0px 10px 0;
   padding-left:10px;
