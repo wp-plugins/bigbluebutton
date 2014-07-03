@@ -93,6 +93,7 @@ You should enable the curl extension in php.ini.
 == Changelog ==
 = 1.3.8 =
 * Fixed issue. The login form was rendered out of the limits when the widget was used in a narrow side column.
+* Fixed issue. The password form in the widget was not rendered correctly.
 
 = 1.3.7 =
 * Fixed issue. Password required option not working for registered users. Only for Anonymous.
