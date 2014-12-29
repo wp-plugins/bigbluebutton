@@ -194,8 +194,10 @@ function bigbluebutton_update() {
         $table_name_old = $wpdb->prefix . "bbb_meetingRooms";
         $listOfMeetings = $wpdb->get_results("SELECT * FROM ".$table_name_old." ORDER BY id");
         foreach ($listOfMeetings as $meeting) {
-            $sql = "INSERT INTO " . $table_name . " (meetingID, meetingName, meetingVersion, attendeePW, moderatorPW) VALUES ('".bigbluebutton_generateToken()."','".$meeting->meetingID."', '".$meeting->meetingVersion."', '".$meeting->attendeePW."', '".$meeting->moderatorPW."');";
-            $wpdb->query($sql);
+            $sql = "INSERT INTO " . $table_name . " (meetingID, meetingName, meetingVersion, attendeePW, moderatorPW) VALUES ( %s, %s, %s, %s, %s);";
+            $wpdb->query(
+                    $wpdb->prepare($sql, bigbluebutton_generateToken(), $meeting->meetingID, $meeting->meetingVersion, $meeting->attendeePW, $meeting->moderatorPW)
+            );
         }
         /// Remove the old table
         $wpdb->query("DROP TABLE IF EXISTS $table_name_old");
@@ -436,12 +438,15 @@ function bigbluebutton_form($args, $bigbluebutton_form_in_widget = false) {
 
         $meetingID = $_POST['meetingID'];
 
-        $found = $wpdb->get_row("SELECT * FROM ".$table_name." WHERE meetingID = '".$meetingID."'");
+        $sql = "SELECT * FROM ".$table_name." WHERE meetingID = %s";
+        $found = $wpdb->get_row(
+                $wpdb->prepare($sql, $meetingID)
+        );
         if( $found ){
             $found->meetingID = bigbluebutton_normalizeMeetingID($found->meetingID);
 
             if( !$current_user->ID ) {
-                $name = isset($_POST['display_name']) && $_POST['display_name']?$_POST['display_name']: $role;
+                $name = isset($_POST['display_name']) && $_POST['display_name']? htmlspecialchars($_POST['display_name']): $role;
                 
                 if( bigbluebutton_validate_defaultRole($role, 'none') ) {
                     $password = $_POST['pwd'];
@@ -868,7 +873,7 @@ function bigbluebutton_create_meetings() {
     if( isset($_POST['SubmitCreate']) && $_POST['SubmitCreate'] == 'Create' ) {
          
         /// Reads the posted values
-        $meetingName = stripcslashes($_POST[ 'meetingName' ]);
+        $meetingName = htmlspecialchars(stripcslashes($_POST[ 'meetingName' ]));
         $attendeePW = $_POST[ 'attendeePW' ]? $_POST[ 'attendeePW' ]: bigbluebutton_generatePasswd(6, 2);
         $moderatorPW = $_POST[ 'moderatorPW' ]? $_POST[ 'moderatorPW' ]: bigbluebutton_generatePasswd(6, 2, $attendeePW);
         $waitForModerator = (isset($_POST[ 'waitForModerator' ]) && $_POST[ 'waitForModerator' ] == 'True')? true: false;
@@ -960,10 +965,14 @@ function bigbluebutton_list_meetings() {
     if( isset($_POST['SubmitList']) ) { //Creates then joins the meeting. If any problems occur the error is displayed
         // Read the posted value and delete
         $meetingID = $_POST['meetingID'];
-        $found = $wpdb->get_row("SELECT * FROM ".$table_name." WHERE meetingID = '".$meetingID."'");
+        $sql = "SELECT * FROM ".$table_name." WHERE meetingID = %s";
+        $found = $wpdb->get_row(
+                $wpdb->prepare($sql, $meetingID)
+        );
+
         if( $found ){
             $found->meetingID = bigbluebutton_normalizeMeetingID($found->meetingID);
-            
+
             //---------------------------------------------------JOIN-------------------------------------------------
             if($_POST['SubmitList'] == 'Join'){
             	//Extra parameters
@@ -1062,7 +1071,11 @@ function bigbluebutton_list_meetings() {
             		}
             	}
             	else { //The meeting was terminated
-            	    $wpdb->query("DELETE FROM ".$table_name." WHERE meetingID = '".$meetingID."'");
+            	    $sql = "DELETE FROM ".$table_name." WHERE meetingID = %s";
+            	    $wpdb->query(
+            	            $wpdb->prepare($sql, $meetingID)
+            	    );
+            	     
             	    $out .= '<div class="updated"><p><strong>'.$found->meetingName.' meeting has been deleted.</strong></p></div>';
             	}
             	 
@@ -1422,4 +1435,3 @@ function bigbluebutton_generatePasswd($numAlpha=6, $numNonAlpha=2, $salt=''){
 function bigbluebutton_normalizeMeetingID($meetingID){
     return (strlen($meetingID) == 12)? sha1(home_url().$meetingID): $meetingID;
 }
-
