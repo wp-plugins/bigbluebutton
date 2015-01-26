@@ -632,7 +632,7 @@ function bigbluebutton_display_redirect_script($bigbluebutton_joinURL, $meetingI
     <script type="text/javascript">
         function bigbluebutton_ping() {
             jQuery.ajax({
-                url : "./wp-content/plugins/bigbluebutton/php/broker.php?action=ping&meetingID='.urlencode($meetingID).'",
+                url : "'.site_url('/wp-content/plugins/bigbluebutton/php/broker.php?action=ping&meetingID='.urlencode($meetingID)).'",
                 async : true,
                 dataType : "xml",
                 success : function(xmlDoc){
@@ -648,7 +648,7 @@ function bigbluebutton_display_redirect_script($bigbluebutton_joinURL, $meetingI
 
         }
 
-        setInterval("bigbluebutton_ping()", 5000);
+        setInterval("bigbluebutton_ping()", 60000);
     </script>';
 
     $out .= '
@@ -658,7 +658,7 @@ function bigbluebutton_display_redirect_script($bigbluebutton_joinURL, $meetingI
           <td>
             Welcome '.$name.'!<br /><br />
             '.$meetingName.' session has not been started yet.<br /><br />
-            <div align="center"><img src="./wp-content/plugins/bigbluebutton/images/polling.gif" /></div><br />
+            <div align="center"><img src="'.site_url('/wp-content/plugins/bigbluebutton/images/polling.gif').'" /></div><br />
             (Your browser will automatically refresh and join the meeting when it starts.)
           </td>
         </tr>
