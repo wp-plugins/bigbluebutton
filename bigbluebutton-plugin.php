@@ -29,7 +29,7 @@ define('BIGBLUEBUTTON_PLUGIN_URL', plugin_dir_url( __FILE__ ));
 
 //constant message definition
 define('BIGBLUEBUTTON_STRING_WELCOME', '<br>Welcome to <b>%%CONFNAME%%</b>!<br><br>To understand how BigBlueButton works see our <a href="event:http://www.bigbluebutton.org/content/videos"><u>tutorial videos</u></a>.<br><br>To join the audio bridge click the headset icon (upper-left hand corner). <b>Please use a headset to avoid causing noise for others.</b>');
-define('BIGBLUEBUTTON_STRING_MEETING_RECORDED', '<br><br>This session is being recorded.');
+define('BIGBLUEBUTTON_STRING_MEETING_RECORDED', '<br><br>This session may be recorded.');
 
 //constant internal definition
 define("BIGBLUEBUTTON_FORM_IN_WIDGET", TRUE );
